@@ -1,0 +1,11 @@
+[package]
+name = "mandala"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+log = "0.4.22"
+simplelog = "0.12.2"
+winit = "0.30.3"
+
+

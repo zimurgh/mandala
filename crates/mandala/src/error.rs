@@ -4,6 +4,7 @@
 
 use std::io;
 
+use ash::LoadingError;
 use winit::error::OsError;
 
 pub type MandalaResult<T> = std::result::Result<T, MandalaError>;
@@ -32,8 +33,15 @@ impl From<log::SetLoggerError> for MandalaError {
 
 #[derive(Debug)]
 pub enum GpuError {
+    AshLoadingError(LoadingError),
     WinitOsError(OsError),
     Other,
+}
+
+impl From<LoadingError> for GpuError {
+    fn from(value: LoadingError) -> GpuError {
+        GpuError::AshLoadingError(value)
+    }
 }
 
 impl From<OsError> for GpuError {

@@ -4,6 +4,7 @@
 
 use std::{net::UdpSocket, sync::Arc};
 
+use ash::Entry;
 use error::GpuResult;
 use log::debug;
 use winit::{
@@ -128,6 +129,8 @@ impl Gpu {
         let window = Arc::new(event_loop.create_window(Window::default_attributes())?);
         let size = window.inner_size();
 
+        let _entry = unsafe { Entry::load()? };
+
         Ok(Gpu { window, size })
     }
 }
@@ -137,7 +140,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_mandala() {
-        assert_eq!(2 + 2, 4);
+    fn test_vulkan_load() {
+        assert!(unsafe { Entry::load().is_ok() });
     }
 }

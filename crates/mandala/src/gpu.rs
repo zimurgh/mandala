@@ -54,10 +54,9 @@ mod tests {
         let app_name = unsafe { ffi::CStr::from_bytes_with_nul_unchecked(b"Mandala\0") };
 
         let layer_names = unsafe {
-            [
-                ffi::CStr::from_bytes_with_nul_unchecked(b"VK_LAYER_KHRONOS_validation\0"),
-                ffi::CStr::from_bytes_with_nul_unchecked(b"VK_LAYER_MESA_overlay\0"),
-            ]
+            [ffi::CStr::from_bytes_with_nul_unchecked(
+                b"VK_LAYER_KHRONOS_validation\0",
+            )]
         };
 
         let layers_names_raw: Vec<*const c_char> = layer_names

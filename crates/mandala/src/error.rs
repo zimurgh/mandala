@@ -4,7 +4,7 @@
 
 use std::io;
 
-use ash::LoadingError;
+use ash::{vk::Result, LoadingError};
 use winit::error::OsError;
 
 pub type MandalaResult<T> = std::result::Result<T, MandalaError>;
@@ -16,6 +16,7 @@ pub enum MandalaError {
     Io(io::Error),
     SetLoggger(log::SetLoggerError),
     GpuError(GpuError),
+    ConfigError(ConfigError),
     Other,
 }
 
@@ -31,8 +32,20 @@ impl From<log::SetLoggerError> for MandalaError {
     }
 }
 
+impl From<ConfigError> for MandalaError {
+    fn from(value: ConfigError) -> MandalaError {
+        MandalaError::ConfigError(value)
+    }
+}
+
+#[derive(Debug)]
+pub enum ConfigError {
+    MissingServerAddr,
+}
+
 #[derive(Debug)]
 pub enum GpuError {
+    VulkanError(ash::vk::Result),
     AshLoadingError(LoadingError),
     WinitOsError(OsError),
     Other,
@@ -47,5 +60,11 @@ impl From<LoadingError> for GpuError {
 impl From<OsError> for GpuError {
     fn from(value: OsError) -> GpuError {
         GpuError::WinitOsError(value)
+    }
+}
+
+impl From<ash::vk::Result> for GpuError {
+    fn from(value: ash::vk::Result) -> GpuError {
+        GpuError::VulkanError(value)
     }
 }

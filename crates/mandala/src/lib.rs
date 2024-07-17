@@ -2,53 +2,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::{net::UdpSocket, sync::Arc};
+use std::net::UdpSocket;
 
-use ash::Entry;
-use error::GpuResult;
+use gpu::Gpu;
 use log::debug;
 use winit::{
     application::ApplicationHandler,
     event::WindowEvent,
     event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
-    window::{Window, WindowId},
+    window::WindowId,
 };
 
+mod config;
 mod error;
+mod gpu;
 
+pub use config::{ClientConfig, ClientConfigBuilder, ServerConfig, ServerConfigBuilder};
 pub use error::MandalaResult;
-
-#[derive(Debug, Clone)]
-pub struct MandalaClientConfig {}
-
-#[derive(Debug, Default, Clone)]
-pub struct MandalaClientConfigBuilder {}
-
-impl MandalaClientConfigBuilder {
-    pub fn new() -> MandalaClientConfigBuilder {
-        MandalaClientConfigBuilder {}
-    }
-
-    pub fn build(&self) -> MandalaResult<MandalaClientConfig> {
-        Ok(MandalaClientConfig {})
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct MandalaServerConfig {}
-
-#[derive(Debug, Default, Clone)]
-pub struct MandalaServerConfigBuilder {}
-
-impl MandalaServerConfigBuilder {
-    pub fn new() -> MandalaServerConfigBuilder {
-        MandalaServerConfigBuilder {}
-    }
-
-    pub fn build(&mut self) -> MandalaResult<MandalaServerConfig> {
-        Ok(MandalaServerConfig {})
-    }
-}
 
 pub fn run_client(mut client: MandalaClient) -> MandalaResult<()> {
     let event_loop = EventLoop::new().unwrap();
@@ -61,17 +31,17 @@ pub fn run_client(mut client: MandalaClient) -> MandalaResult<()> {
 }
 
 pub struct MandalaClient {
-    config: MandalaClientConfig,
+    _config: ClientConfig,
     gpu: Option<Gpu>,
-    socket: Option<UdpSocket>,
+    _socket: Option<UdpSocket>,
 }
 
 impl MandalaClient {
-    pub fn new(config: MandalaClientConfig) -> MandalaClient {
+    pub fn new(_config: ClientConfig) -> MandalaClient {
         MandalaClient {
-            config,
+            _config,
             gpu: None,
-            socket: None,
+            _socket: None,
         }
     }
 }
@@ -81,16 +51,18 @@ impl ApplicationHandler for MandalaClient {
         self.gpu = Some(Gpu::init(&event_loop).unwrap());
     }
 
-    fn window_event(&mut self, event_loop: &ActiveEventLoop, id: WindowId, event: WindowEvent) {
+    fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
         match event {
             WindowEvent::CloseRequested => {
                 debug!("The close button was pressed; stopping");
                 event_loop.exit();
             }
             WindowEvent::RedrawRequested => {
+                /*
                 if let Some(gpu) = &self.gpu {
-                    gpu.window.request_redraw();
+                    gpu.window().request_redraw();
                 }
+                */
             }
             _ => (),
         }
@@ -98,49 +70,24 @@ impl ApplicationHandler for MandalaClient {
 }
 
 pub fn run_server(mut server: MandalaServer) -> MandalaResult<()> {
-    let socket = UdpSocket::bind("0.0.0.0:49474")?;
+    let socket = UdpSocket::bind(server.config.addr)?;
     socket.set_nonblocking(true)?;
     server.socket = Some(socket);
+
     Ok(())
 }
 
 #[derive(Debug)]
 pub struct MandalaServer {
-    config: MandalaServerConfig,
+    config: ServerConfig,
     socket: Option<UdpSocket>,
 }
 
 impl MandalaServer {
-    pub fn new(config: MandalaServerConfig) -> MandalaServer {
+    pub fn new(config: ServerConfig) -> MandalaServer {
         MandalaServer {
             config,
             socket: None,
         }
-    }
-}
-
-pub struct Gpu {
-    window: Arc<Window>,
-    size: winit::dpi::PhysicalSize<u32>,
-}
-
-impl Gpu {
-    pub fn init(event_loop: &ActiveEventLoop) -> GpuResult<Gpu> {
-        let window = Arc::new(event_loop.create_window(Window::default_attributes())?);
-        let size = window.inner_size();
-
-        let _entry = unsafe { Entry::load()? };
-
-        Ok(Gpu { window, size })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_vulkan_load() {
-        assert!(unsafe { Entry::load().is_ok() });
     }
 }

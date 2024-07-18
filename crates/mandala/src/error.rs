@@ -5,7 +5,7 @@
 use std::io;
 
 use ash::{vk::Result, LoadingError};
-use winit::error::OsError;
+use winit::{error::OsError, raw_window_handle::HandleError};
 
 pub type MandalaResult<T> = std::result::Result<T, MandalaError>;
 
@@ -47,6 +47,7 @@ pub enum ConfigError {
 pub enum GpuError {
     VulkanError(ash::vk::Result),
     AshLoadingError(LoadingError),
+    WinitHandleError(HandleError),
     WinitOsError(OsError),
     Other,
 }
@@ -66,5 +67,11 @@ impl From<OsError> for GpuError {
 impl From<ash::vk::Result> for GpuError {
     fn from(value: ash::vk::Result) -> GpuError {
         GpuError::VulkanError(value)
+    }
+}
+
+impl From<HandleError> for GpuError {
+    fn from(value: HandleError) -> GpuError {
+        GpuError::WinitHandleError(value)
     }
 }

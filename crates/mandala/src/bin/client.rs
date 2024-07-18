@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
 use log::info;
 use mandala::{run_client, ClientConfigBuilder, MandalaClient, MandalaResult};
 use simplelog::{Config, SimpleLogger};
@@ -9,7 +11,12 @@ use simplelog::{Config, SimpleLogger};
 fn main() -> MandalaResult<()> {
     SimpleLogger::init(log::LevelFilter::Debug, Config::default())?;
     info!("Starting Mandala client...");
-    let config = ClientConfigBuilder::new().build()?;
+    let config = ClientConfigBuilder::new()
+        .server_addr(SocketAddr::new(
+            IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
+            49474,
+        ))
+        .build()?;
     run_client(MandalaClient::new(config))?;
     Ok(())
 }

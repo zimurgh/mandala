@@ -58,11 +58,9 @@ impl ApplicationHandler for MandalaClient {
                 event_loop.exit();
             }
             WindowEvent::RedrawRequested => {
-                /*
-                if let Some(gpu) = &self.gpu {
+                if let Some(gpu) = &mut self.gpu {
                     gpu.window().request_redraw();
                 }
-                */
             }
             _ => (),
         }

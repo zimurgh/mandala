@@ -4,7 +4,7 @@
 
 use std::net::UdpSocket;
 
-use gpu::Gpu;
+use gestalt::Gestalt;
 use log::debug;
 use winit::{
     application::ApplicationHandler,
@@ -15,7 +15,7 @@ use winit::{
 
 mod config;
 mod error;
-mod gpu;
+mod gestalt;
 
 pub use config::{ClientConfig, ClientConfigBuilder, ServerConfig, ServerConfigBuilder};
 pub use error::MandalaResult;
@@ -32,7 +32,7 @@ pub fn run_client(mut client: MandalaClient) -> MandalaResult<()> {
 
 pub struct MandalaClient {
     _config: ClientConfig,
-    gpu: Option<Gpu>,
+    gestalt: Option<Gestalt>,
     _socket: Option<UdpSocket>,
 }
 
@@ -40,7 +40,7 @@ impl MandalaClient {
     pub fn new(_config: ClientConfig) -> MandalaClient {
         MandalaClient {
             _config,
-            gpu: None,
+            gestalt: None,
             _socket: None,
         }
     }
@@ -48,7 +48,7 @@ impl MandalaClient {
 
 impl ApplicationHandler for MandalaClient {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        self.gpu = Some(Gpu::init(&event_loop).unwrap());
+        self.gestalt = Some(Gestalt::init(&event_loop).unwrap());
     }
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
@@ -58,8 +58,8 @@ impl ApplicationHandler for MandalaClient {
                 event_loop.exit();
             }
             WindowEvent::RedrawRequested => {
-                if let Some(gpu) = &mut self.gpu {
-                    gpu.window().request_redraw();
+                if let Some(gestalt) = &mut self.gestalt {
+                    gestalt.window().request_redraw();
                 }
             }
             _ => (),

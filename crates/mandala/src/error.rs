@@ -9,13 +9,13 @@ use winit::{error::OsError, raw_window_handle::HandleError};
 
 pub type MandalaResult<T> = std::result::Result<T, MandalaError>;
 
-pub type GpuResult<T> = std::result::Result<T, GpuError>;
+pub type GestaltResult<T> = std::result::Result<T, GestaltError>;
 
 #[derive(Debug)]
 pub enum MandalaError {
     Io(io::Error),
     SetLoggger(log::SetLoggerError),
-    GpuError(GpuError),
+    GestaltError(GestaltError),
     ConfigError(ConfigError),
     Other,
 }
@@ -44,7 +44,7 @@ pub enum ConfigError {
 }
 
 #[derive(Debug)]
-pub enum GpuError {
+pub enum GestaltError {
     VulkanError(ash::vk::Result),
     AshLoadingError(LoadingError),
     WinitHandleError(HandleError),
@@ -52,26 +52,26 @@ pub enum GpuError {
     Other,
 }
 
-impl From<LoadingError> for GpuError {
-    fn from(value: LoadingError) -> GpuError {
-        GpuError::AshLoadingError(value)
+impl From<LoadingError> for GestaltError {
+    fn from(value: LoadingError) -> GestaltError {
+        GestaltError::AshLoadingError(value)
     }
 }
 
-impl From<OsError> for GpuError {
-    fn from(value: OsError) -> GpuError {
-        GpuError::WinitOsError(value)
+impl From<OsError> for GestaltError {
+    fn from(value: OsError) -> GestaltError {
+        GestaltError::WinitOsError(value)
     }
 }
 
-impl From<ash::vk::Result> for GpuError {
-    fn from(value: ash::vk::Result) -> GpuError {
-        GpuError::VulkanError(value)
+impl From<ash::vk::Result> for GestaltError {
+    fn from(value: ash::vk::Result) -> GestaltError {
+        GestaltError::VulkanError(value)
     }
 }
 
-impl From<HandleError> for GpuError {
-    fn from(value: HandleError) -> GpuError {
-        GpuError::WinitHandleError(value)
+impl From<HandleError> for GestaltError {
+    fn from(value: HandleError) -> GestaltError {
+        GestaltError::WinitHandleError(value)
     }
 }

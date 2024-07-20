@@ -2,37 +2,91 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::net::UdpSocket;
-
-use gestalt::Gestalt;
-use log::debug;
-use winit::{
-    application::ApplicationHandler,
-    event::WindowEvent,
-    event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
-    window::WindowId,
+use std::{
+    io::{self, Write},
+    net::UdpSocket,
+    time::Duration,
 };
 
 mod config;
 mod error;
-mod gestalt;
 
 pub use config::{ClientConfig, ClientConfigBuilder, ServerConfig, ServerConfigBuilder};
 pub use error::MandalaResult;
+use sdl2::{event::Event, keyboard::Keycode, pixels::Color};
+
+// Rust follow along of [_Ray Tracing in One Weekend_](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
+pub fn run_ray_tracer() {
+    let image_width = 256;
+    let image_height = 256;
+
+    println!("P3");
+    println!("{} {}", image_width, image_height);
+    println!("255");
+
+    for j in 0..image_height {
+        eprint!("\rScanlines remaining: {} ", image_height - j);
+        io::stderr().flush().unwrap();
+        for i in 0..image_width {
+            let r = i as f64 / (image_width - 1) as f64;
+            let g = j as f64 / (image_height - 1) as f64;
+            let b = 0.0;
+
+            let ir = (255.999 * r) as i32;
+            let ig = (255.999 * g) as i32;
+            let ib = (255.999 * b) as i32;
+
+            println!("{} {} {}", ir, ig, ib);
+        }
+    }
+
+    eprintln!("\rDone.               ");
+}
 
 pub fn run_client(mut client: MandalaClient) -> MandalaResult<()> {
-    let event_loop = EventLoop::new().unwrap();
+    let sdl_context = sdl2::init().unwrap();
+    let video_subsystem = sdl_context.video().unwrap();
 
-    event_loop.set_control_flow(ControlFlow::Poll);
+    let window = video_subsystem
+        .window("Mandala", 2560, 1440)
+        .fullscreen()
+        .position_centered()
+        .hidden()
+        .build()
+        .unwrap();
 
-    let _ = event_loop.run_app(&mut client);
+    let mut canvas = window.into_canvas().build().unwrap();
+
+    canvas.set_draw_color(Color::RGB(0, 255, 255));
+    canvas.clear();
+    canvas.present();
+    canvas.window_mut().show();
+    let mut event_pump = sdl_context.event_pump().unwrap();
+    let mut i = 0;
+    'running: loop {
+        i = (i + 1) % 255;
+        canvas.set_draw_color(Color::RGB(i, 64, 255 - i));
+        canvas.clear();
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    ..
+                } => break 'running,
+                _ => {}
+            }
+        }
+
+        canvas.present();
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+    }
 
     Ok(())
 }
 
 pub struct MandalaClient {
     _config: ClientConfig,
-    gestalt: Option<Gestalt>,
     _socket: Option<UdpSocket>,
 }
 
@@ -40,29 +94,7 @@ impl MandalaClient {
     pub fn new(_config: ClientConfig) -> MandalaClient {
         MandalaClient {
             _config,
-            gestalt: None,
             _socket: None,
-        }
-    }
-}
-
-impl ApplicationHandler for MandalaClient {
-    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        self.gestalt = Some(Gestalt::init(&event_loop).unwrap());
-    }
-
-    fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
-        match event {
-            WindowEvent::CloseRequested => {
-                debug!("The close button was pressed; stopping");
-                event_loop.exit();
-            }
-            WindowEvent::RedrawRequested => {
-                if let Some(gestalt) = &mut self.gestalt {
-                    gestalt.window().request_redraw();
-                }
-            }
-            _ => (),
         }
     }
 }

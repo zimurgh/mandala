@@ -18,6 +18,8 @@ jobs:
     - uses: rui314/setup-mold@v1
     - name: Install Vulkan loader
       run: sudo apt-get install libvulkan-dev
+    - name: Install SDL2
+      run: sudo apt-get install libsdl2-dev libsdl2-ttf-dev
     - uses: actions/checkout@v4
     - name: Build
       run: cargo build --verbose
